@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>My Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: ‘DM Sans’, sans-serif;
+background: #fce8ee;
+color: #1a2e5a;
+min-height: 100vh;
+}
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── MONTH VIEW ── */
+#monthView {
+max-width: 460px;
+margin: 0 auto;
+padding: 28px 16px 60px;
+background: #fce8ee;
+}
+
+.month-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 20px;
+}
+
+.month-title {
+font-family: ‘DM Serif Display’, serif;
+font-size: 1.8rem;
+color: #1a2e5a;
+}
+
+.nav-btn {
+width: 34px;
+height: 34px;
+border-radius: 50%;
+border: none;
+background: #1a2e5a;
+color: #fff;
+font-size: 1rem;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+}
+.nav-btn:active { opacity: 0.7; }
+
+.weekday-row {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+margin-bottom: 6px;
+}
+.weekday-label {
+text-align: center;
+font-size: 0.6rem;
+font-weight: 500;
+text-transform: uppercase;
+letter-spacing: 0.07em;
+color: #8899bb;
+padding: 4px 0;
+}
+
+.cal-grid {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 5px;
+}
+
+.cal-day {
+aspect-ratio: 1;
+border: 1px solid #f0d0d8;
+border-radius: 8px;
+background: #ffffff;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+font-size: 0.82rem;
+color: #1a2e5a;
+position: relative;
+}
+.cal-day:active { background: #fde0e7; }
+.cal-day.empty { border-color: transparent; background: transparent; pointer-events: none; }
+
+.cal-day.today { border-color: transparent; background: transparent; }
+.cal-day.today .day-num {
+width: 28px;
+height: 28px;
+border-radius: 50%;
+border: 2px solid #1a2e5a;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: 700;
+color: #1a2e5a;
+}
+
+.cal-day.has-special::after {
+content: ‘’;
+width: 5px;
+height: 5px;
+border-radius: 50%;
+background: #e8538a;
+position: absolute;
+bottom: 4px;
+}
+
+.legend {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+margin-top: 20px;
+padding: 14px 16px;
+background: #ffffff;
+border: 1px solid #f0d0d8;
+border-radius: 10px;
+}
+.legend-item {
+display: flex;
+align-items: center;
+gap: 7px;
+font-size: 0.75rem;
+color: #1a2e5a;
+}
+.legend-dot {
+width: 11px;
+height: 11px;
+border-radius: 3px;
+flex-shrink: 0;
+}
+
+/* ── DAY VIEW ── */
+#dayView {
+max-width: 460px;
+margin: 0 auto;
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+background: #fce8ee;
+}
+
+.day-header {
+background: #ffffff;
+border-bottom: 1px solid #f0d0d8;
+padding: 18px 20px 14px;
+position: sticky;
+top: 0;
+z-index: 10;
+}
+
+.back-btn {
+background: #ffffff;
+border: 1px solid #ddc0c8;
+border-radius: 20px;
+padding: 6px 16px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.78rem;
+color: #1a2e5a;
+cursor: pointer;
+margin-bottom: 10px;
+display: inline-flex;
+align-items: center;
+gap: 5px;
+}
+
+.day-title-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.day-title {
+font-family: ‘DM Serif Display’, serif;
+font-size: 1.4rem;
+color: #1a2e5a;
+}
+
+.day-nav { display: flex; gap: 6px; }
+
+.day-blocks {
+padding: 14px 16px 380px;
+flex: 1;
+display: flex;
+flex-direction: column;
+gap: 7px;
+}
+
+/* ── TASK BLOCKS ── */
+.task-block {
+border: 1px solid #f0d0d8;
+border-radius: 10px;
+background: #ffffff;
+overflow: hidden;
+}
+.task-block.red      { background: #ff6b6b; border: 1px solid #e04040; }
+.task-block.orange   { background: #FFD580; border: 1px solid #e0b040; }
+.task-block.yellow   { background: #fff176; border: 1px solid #d4c000; }
+.task-block.blue     { background: #90caf9; border: 1px solid #5090d0; }
+.task-block.green    { background: #a5d6a7; border: 1px solid #4caf50; }
+.task-block.purple   { background: #ce93d8; border: 1px solid #9b59b6; }
+.task-block.pink     { background: #f48fb1; border: 1px solid #d4608a; }
+.task-block.lilac    {
+background-color: #c8a8e9;
+background-image: radial-gradient(circle, #ffffff 2px, transparent 2px);
+background-size: 14px 14px;
+border: 1px solid #a070c0;
+}
+
+.task-block.red .task-time, .task-block.orange .task-time,
+.task-block.yellow .task-time, .task-block.blue .task-time,
+.task-block.green .task-time, .task-block.purple .task-time,
+.task-block.pink .task-time, .task-block.lilac .task-time { color: #1a2e5a; opacity: 0.6; }
+
+.task-block.red .task-title, .task-block.orange .task-title,
+.task-block.yellow .task-title, .task-block.blue .task-title,
+.task-block.green .task-title, .task-block.purple .task-title,
+.task-block.pink .task-title, .task-block.lilac .task-title { color: #1a2e5a; font-weight: 500; }
+
+.task-block.red .task-arrow, .task-block.orange .task-arrow,
+.task-block.yellow .task-arrow, .task-block.blue .task-arrow,
+.task-block.green .task-arrow, .task-block.purple .task-arrow,
+.task-block.pink .task-arrow, .task-block.lilac .task-arrow { color: rgba(26,46,90,0.4); }
+
+.task-block.red .task-detail, .task-block.orange .task-detail,
+.task-block.yellow .task-detail, .task-block.blue .task-detail,
+.task-block.green .task-detail, .task-block.purple .task-detail,
+.task-block.pink .task-detail, .task-block.lilac .task-detail { border-top: 1px dashed rgba(255,255,255,0.6); color: #1a2e5a; }
+
+.task-main {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 13px;
+cursor: pointer;
+user-select: none;
+}
+
+.task-time {
+font-size: 0.73rem;
+font-weight: 500;
+color: #7788aa;
+min-width: 38px;
+}
+
+.task-title {
+flex: 1;
+font-size: 0.92rem;
+color: #1a2e5a;
+}
+
+.task-arrow {
+font-size: 0.6rem;
+color: #bbccdd;
+transition: transform 0.2s;
+}
+.task-block.open .task-arrow { transform: rotate(180deg); }
+
+.task-detail {
+display: none;
+padding: 8px 13px 12px 61px;
+font-size: 0.8rem;
+color: #4a5e8a;
+line-height: 1.6;
+border-top: 1px dashed #f0d0d8;
+}
+.task-block.open .task-detail { display: block; }
+
+.task-handle {
+font-size: 0.85rem;
+color: #ccc;
+cursor: grab;
+padding: 0 6px 0 2px;
+touch-action: none;
+user-select: none;
+flex-shrink: 0;
+}
+.task-block.dragging {
+opacity: 0.4;
+}
+.task-block.drag-over {
+border-top: 2px solid #1a2e5a;
+}
+background: #e8f0fc;
+color: #1a2e5a;
+border: none;
+border-radius: 5px;
+padding: 4px 12px;
+font-size: 0.7rem;
+cursor: pointer;
+font-family: ‘DM Sans’, sans-serif;
+}
+
+.edit-field {
+display: block;
+width: 100%;
+margin-bottom: 6px;
+padding: 8px 10px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.82rem;
+color: #1a2e5a;
+background: #fce8ee;
+border: 1px solid #f0d0d8;
+border-radius: 8px;
+outline: none;
+}
+
+.task-delete {
+background: #d63b32;
+color: white;
+border: none;
+border-radius: 5px;
+padding: 4px 12px;
+font-size: 0.7rem;
+cursor: pointer;
+margin-top: 6px;
+font-family: ‘DM Sans’, sans-serif;
+}
+
+/* ── NO TASKS ── */
+.no-tasks {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+flex: 1;
+padding: 60px 0;
+gap: 16px;
+}
+.no-tasks-text {
+color: #c0aab0;
+font-size: 0.85rem;
+font-style: italic;
+}
+.no-tasks-btn {
+width: 64px;
+height: 64px;
+border-radius: 50%;
+border: 2px dashed #d0a0b0;
+background: #ffffff;
+color: #d0a0b0;
+font-size: 2rem;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+/* ── ADD SECTION ── */
+.add-section {
+position: fixed;
+bottom: 0;
+left: 50%;
+transform: translateX(-50%);
+width: 100%;
+max-width: 460px;
+background: #ffffff;
+border-top: 1px solid #f0d0d8;
+padding: 12px 16px 24px;
+z-index: 20;
+}
+
+.add-row {
+display: flex;
+gap: 8px;
+margin-bottom: 8px;
+}
+
+.add-time {
+width: 80px;
+padding: 12px 10px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.95rem;
+color: #1a2e5a;
+background: #fce8ee;
+border: 1px solid #f0d0d8;
+border-radius: 8px;
+outline: none;
+}
+
+.add-input {
+flex: 1;
+padding: 12px 12px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.95rem;
+color: #1a2e5a;
+background: #fce8ee;
+border: 1px solid #f0d0d8;
+border-radius: 8px;
+outline: none;
+}
+
+.add-detail {
+flex: 1;
+padding: 10px 12px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.85rem;
+color: #9aaabb;
+background: #fce8ee;
+border: 1px solid #f0d0d8;
+border-radius: 8px;
+outline: none;
+}
+
+.add-bottom {
+display: flex;
+gap: 7px;
+align-items: center;
+}
+
+.color-pick {
+display: flex;
+gap: 6px;
+align-items: center;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+flex-shrink: 1;
+min-width: 0;
+padding-bottom: 2px;
+}
+.color-pick::-webkit-scrollbar { display: none; }
+
+.cp {
+width: 26px;
+height: 26px;
+border-radius: 6px;
+border: 2px solid transparent;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+}
+.cp.c-white  { background: #fff; border: 2px solid #ddc0c8; }
+.cp.c-red    { background: #ff6b6b; }
+.cp.c-orange { background: #FFD580; }
+.cp.c-yellow { background: #fff176; border: 1px solid #d4c000; }
+.cp.c-blue   { background: #90caf9; }
+.cp.c-green  { background: #a5d6a7; }
+.cp.c-purple { background: #ce93d8; }
+.cp.c-pink   { background: #f48fb1; }
+.cp.c-lilac  { background-color: #c8a8e9; background-image: radial-gradient(circle, #ffffff 2px, transparent 2px); background-size: 8px 8px; }
+
+.cp.c-red-dot    { background-color: #ff6b6b; background-image: radial-gradient(circle, #fff 2px, transparent 2px); background-size: 8px 8px; }
+.cp.c-orange-dot { background-color: #FFD580; background-image: radial-gradient(circle, #fff 2px, transparent 2px); background-size: 8px 8px; }
+.cp.c-yellow-dot { background-color: #fff176; background-image: radial-gradient(circle, #fff 2px, transparent 2px); background-size: 8px 8px; border: 1px solid #d4c000; }
+.cp.c-blue-dot   { background-color: #90caf9; background-image: radial-gradient(circle, #fff 2px, transparent 2px); background-size: 8px 8px; }
+.cp.c-green-dot  { background-color: #a5d6a7; background-image: radial-gradient(circle, #fff 2px, transparent 2px); background-size: 8px 8px; }
+.cp.c-purple-dot { background-color: #ce93d8; background-image: radial-gradient(circle, #fff 2px, transparent 2px); background-size: 8px 8px; }
+.cp.c-pink-dot   { background-color: #f48fb1; background-image: radial-gradient(circle, #fff 2px, transparent 2px); background-size: 8px 8px; }
+
+.task-block.red-dot    { background-color: #ff6b6b; background-image: radial-gradient(circle, #fff 3px, transparent 3px); background-size: 16px 16px; border: 1px solid #e04040; }
+.task-block.orange-dot { background-color: #FFD580; background-image: radial-gradient(circle, #fff 3px, transparent 3px); background-size: 16px 16px; border: 1px solid #e0b040; }
+.task-block.yellow-dot { background-color: #fff176; background-image: radial-gradient(circle, #fff 3px, transparent 3px); background-size: 16px 16px; border: 1px solid #d4c000; }
+.task-block.blue-dot   { background-color: #90caf9; background-image: radial-gradient(circle, #fff 3px, transparent 3px); background-size: 16px 16px; border: 1px solid #5090d0; }
+.task-block.green-dot  { background-color: #a5d6a7; background-image: radial-gradient(circle, #fff 3px, transparent 3px); background-size: 16px 16px; border: 1px solid #4caf50; }
+.task-block.purple-dot { background-color: #ce93d8; background-image: radial-gradient(circle, #fff 3px, transparent 3px); background-size: 16px 16px; border: 1px solid #9b59b6; }
+.task-block.pink-dot   { background-color: #f48fb1; background-image: radial-gradient(circle, #fff 3px, transparent 3px); background-size: 16px 16px; border: 1px solid #d4608a; }
+
+.task-block.red-dot .task-time, .task-block.orange-dot .task-time,
+.task-block.yellow-dot .task-time, .task-block.blue-dot .task-time,
+.task-block.green-dot .task-time, .task-block.purple-dot .task-time,
+.task-block.pink-dot .task-time { color: #1a2e5a; opacity: 0.6; }
+
+.task-block.red-dot .task-title, .task-block.orange-dot .task-title,
+.task-block.yellow-dot .task-title, .task-block.blue-dot .task-title,
+.task-block.green-dot .task-title, .task-block.purple-dot .task-title,
+.task-block.pink-dot .task-title { color: #1a2e5a; font-weight: 500; }
+
+.task-block.red-dot .task-arrow, .task-block.orange-dot .task-arrow,
+.task-block.yellow-dot .task-arrow, .task-block.blue-dot .task-arrow,
+.task-block.green-dot .task-arrow, .task-block.purple-dot .task-arrow,
+.task-block.pink-dot .task-arrow { color: rgba(26,46,90,0.4); }
+
+.task-block.red-dot .task-detail, .task-block.orange-dot .task-detail,
+.task-block.yellow-dot .task-detail, .task-block.blue-dot .task-detail,
+.task-block.green-dot .task-detail, .task-block.purple-dot .task-detail,
+.task-block.pink-dot .task-detail { border-top: 1px dashed rgba(255,255,255,0.6); color: #1a2e5a; }
+
+.add-repeat {
+flex: 1;
+padding: 10px 10px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.8rem;
+color: #1a2e5a;
+background: #fce8ee;
+border: 1px solid #f0d0d8;
+border-radius: 8px;
+outline: none;
+appearance: none;
+-webkit-appearance: none;
+cursor: pointer;
+}
+
+.add-btn {
+width: 40px;
+height: 40px;
+border-radius: 8px;
+border: none;
+background: #1a2e5a;
+color: #fff;
+font-size: 1.4rem;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+}
+
+.routine-btn {
+display: block;
+width: 100%;
+margin-top: 14px;
+padding: 12px;
+background: #ffffff;
+border: 1px solid #f0d0d8;
+border-radius: 10px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.88rem;
+color: #1a2e5a;
+cursor: pointer;
+text-align: center;
+}
+
+.meaning-row {
+display: flex;
+align-items: center;
+gap: 8px;
+width: 100%;
+}
+
+.meaning-input {
+flex: 1;
+border: none;
+border-bottom: 1px solid #f0d0d8;
+padding: 4px 2px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.78rem;
+color: #1a2e5a;
+background: transparent;
+outline: none;
+}
+</style>
+
+</head>
+<body>
+
+<div id="monthView" class="view active">
+ <div class="month-header">
+   <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+   <div class="month-title" id="monthTitle"></div>
+   <button class="nav-btn" onclick="changeMonth(1)">›</button>
+ </div>
+ <div class="weekday-row" id="weekdayRow"></div>
+ <div class="cal-grid" id="calGrid"></div>
+ <div class="legend" id="colorMeanings">
+   <div style="width:100%;font-size:0.8rem;font-weight:500;color:#1a2e5a;margin-bottom:6px">🎨 My color meanings — tap to edit</div>
+   <div class="meaning-row"><div class="legend-dot" style="background:#ff6b6b"></div><input class="meaning-input" data-key="red" placeholder="e.g. School / activities"></div>
+   <div class="meaning-row"><div class="legend-dot" style="background:#FFD580"></div><input class="meaning-input" data-key="orange" placeholder="e.g. Daily habits"></div>
+   <div class="meaning-row"><div class="legend-dot" style="background:#fff176;border:1px solid #d4c000"></div><input class="meaning-input" data-key="yellow" placeholder="e.g. Study time"></div>
+   <div class="meaning-row"><div class="legend-dot" style="background:#90caf9"></div><input class="meaning-input" data-key="blue" placeholder="e.g. ..."></div>
+   <div class="meaning-row"><div class="legend-dot" style="background:#a5d6a7"></div><input class="meaning-input" data-key="green" placeholder="e.g. Tests"></div>
+   <div class="meaning-row"><div class="legend-dot" style="background:#ce93d8"></div><input class="meaning-input" data-key="purple" placeholder="e.g. Birthdays"></div>
+   <div class="meaning-row"><div class="legend-dot" style="background:#f48fb1"></div><input class="meaning-input" data-key="pink" placeholder="e.g. Special occasions"></div>
+   <div class="meaning-row"><div class="legend-dot" style="background:#fff;border:1.5px solid #ddc0c8"></div><input class="meaning-input" data-key="white" placeholder="e.g. Routine"></div>
+   <div class="meaning-row"><div class="legend-dot" style="background-color:#ff6b6b;background-image:radial-gradient(circle,#fff 2px,transparent 2px);background-size:8px 8px"></div><input class="meaning-input" data-key="red-dot" placeholder="e.g. ..."></div>
+   <div class="meaning-row"><div class="legend-dot" style="background-color:#FFD580;background-image:radial-gradient(circle,#fff 2px,transparent 2px);background-size:8px 8px"></div><input class="meaning-input" data-key="orange-dot" placeholder="e.g. ..."></div>
+   <div class="meaning-row"><div class="legend-dot" style="background-color:#fff176;background-image:radial-gradient(circle,#fff 2px,transparent 2px);background-size:8px 8px;border:1px solid #d4c000"></div><input class="meaning-input" data-key="yellow-dot" placeholder="e.g. ..."></div>
+   <div class="meaning-row"><div class="legend-dot" style="background-color:#90caf9;background-image:radial-gradient(circle,#fff 2px,transparent 2px);background-size:8px 8px"></div><input class="meaning-input" data-key="blue-dot" placeholder="e.g. ..."></div>
+   <div class="meaning-row"><div class="legend-dot" style="background-color:#a5d6a7;background-image:radial-gradient(circle,#fff 2px,transparent 2px);background-size:8px 8px"></div><input class="meaning-input" data-key="green-dot" placeholder="e.g. ..."></div>
+   <div class="meaning-row"><div class="legend-dot" style="background-color:#ce93d8;background-image:radial-gradient(circle,#fff 2px,transparent 2px);background-size:8px 8px"></div><input class="meaning-input" data-key="purple-dot" placeholder="e.g. ..."></div>
+   <div class="meaning-row"><div class="legend-dot" style="background-color:#f48fb1;background-image:radial-gradient(circle,#fff 2px,transparent 2px);background-size:8px 8px"></div><input class="meaning-input" data-key="pink-dot" placeholder="e.g. ..."></div>
+ </div>
+ <button class="routine-btn" onclick="showRoutine()">✏️ Edit my routine</button>
+ <div style="display:flex;gap:8px;margin-top:10px">
+   <button class="routine-btn" style="flex:1;background:#e8f0fc;border-color:#c0d0f0" onclick="exportData()">⬇️ Save backup</button>
+   <label class="routine-btn" style="flex:1;background:#f0fce8;border-color:#c0f0c0;text-align:center;cursor:pointer">
+     ⬆️ Restore backup
+     <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+   </label>
+ </div>
+ <button class="routine-btn" style="background:#ffe8e8;border-color:#f0a0a0;margin-top:8px;font-weight:600" onclick="recoverEmergencyBackup()">🚨 Recover lost data</button>
+</div>
+
+<div id="dayView" class="view">
+ <div class="day-header">
+   <button class="back-btn" onclick="showMonth()">← Calendar</button>
+   <div class="day-title-row">
+     <div class="day-title" id="dayTitle"></div>
+     <div class="day-nav">
+       <button class="nav-btn" onclick="changeDay(-1)">‹</button>
+       <button class="nav-btn" onclick="changeDay(1)">›</button>
+     </div>
+   </div>
+ </div>
+
+ <div class="day-blocks" id="dayBlocks"></div>
+
+ <div class="add-section">
+   <div class="add-row">
+     <input class="add-time" id="newTime" type="text" placeholder="Time">
+     <input class="add-input" id="newTitle" type="text" placeholder="Add a task...">
+   </div>
+   <div class="add-row">
+     <input class="add-detail" id="newDetail" type="text" placeholder="Details (optional)">
+   </div>
+   <div class="add-bottom">
+     <select class="add-repeat" id="newRepeat">
+       <option value="none">No repeat</option>
+       <option value="daily">Every day</option>
+       <option value="weekdays">Every day except Fri & Sat</option>
+       <option value="weekly">Every week</option>
+       <option value="2weeks">Every 2 weeks</option>
+       <option value="monthly">Every month</option>
+       <option value="2months">Every 2 months</option>
+       <option value="3months">Every 3 months</option>
+       <option value="yearly">Every year</option>
+     </select>
+     <div class="color-pick">
+       <div class="cp c-white selected" data-color="white" onclick="pickColor(this)"></div>
+       <div class="cp c-red" data-color="red" onclick="pickColor(this)"></div>
+       <div class="cp c-orange" data-color="orange" onclick="pickColor(this)"></div>
+       <div class="cp c-yellow" data-color="yellow" onclick="pickColor(this)"></div>
+       <div class="cp c-blue" data-color="blue" onclick="pickColor(this)"></div>
+       <div class="cp c-green" data-color="green" onclick="pickColor(this)"></div>
+       <div class="cp c-purple" data-color="purple" onclick="pickColor(this)"></div>
+       <div class="cp c-pink" data-color="pink" onclick="pickColor(this)"></div>
+       <div class="cp c-lilac" data-color="lilac" onclick="pickColor(this)"></div>
+       <div class="cp c-red-dot" data-color="red-dot" onclick="pickColor(this)"></div>
+       <div class="cp c-orange-dot" data-color="orange-dot" onclick="pickColor(this)"></div>
+       <div class="cp c-yellow-dot" data-color="yellow-dot" onclick="pickColor(this)"></div>
+       <div class="cp c-blue-dot" data-color="blue-dot" onclick="pickColor(this)"></div>
+       <div class="cp c-green-dot" data-color="green-dot" onclick="pickColor(this)"></div>
+       <div class="cp c-purple-dot" data-color="purple-dot" onclick="pickColor(this)"></div>
+       <div class="cp c-pink-dot" data-color="pink-dot" onclick="pickColor(this)"></div>
+     </div>
+     <button class="add-btn" onclick="addTask()">+</button>
+   </div>
+ </div>
+</div>
+
+<div id="routineView" class="view">
+ <div class="day-header">
+   <button class="back-btn" onclick="showMonth()">← Calendar</button>
+   <div class="day-title-row">
+     <div class="day-title">My Routine</div>
+   </div>
+   <div style="font-size:0.75rem;color:#9aaabb;margin-top:6px;">These tasks appear on every day automatically.</div>
+ </div>
+
+ <div class="day-blocks" id="routineBlocks"></div>
+
+ <div class="add-section">
+   <div class="add-row">
+     <input class="add-time" id="rTime" type="text" placeholder="Time">
+     <input class="add-input" id="rTitle" type="text" placeholder="Routine task...">
+   </div>
+   <div class="add-bottom">
+     <input class="add-detail" id="rDetail" type="text" placeholder="Details (optional)">
+     <div class="color-pick">
+       <div class="cp c-white selected" data-color="white" onclick="pickRoutineColor(this)"></div>
+       <div class="cp c-red" data-color="red" onclick="pickRoutineColor(this)"></div>
+       <div class="cp c-orange" data-color="orange" onclick="pickRoutineColor(this)"></div>
+       <div class="cp c-yellow" data-color="yellow" onclick="pickRoutineColor(this)"></div>
+     </div>
+     <button class="add-btn" onclick="addRoutineTask()">+</button>
+   </div>
+ </div>
+</div>
+
+<script>
+let currentYear, currentMonth, selectedDate;
+let chosenColor = 'white';
+let chosenRoutineColor = 'white';
+// Try to recover from combined backup if main storage empty
+const _combined = localStorage.getItem('myPlanner_combined_backup');
+if (_combined && Object.keys(JSON.parse(localStorage.getItem('myPlanner_tasks_v1') || '{}')).length === 0) {
+ try {
+   const _data = JSON.parse(_combined);
+   if (_data.tasks) localStorage.setItem('myPlanner_tasks_v1', JSON.stringify(_data.tasks));
+   if (_data.routine) localStorage.setItem('myPlanner_routine_v1', JSON.stringify(_data.routine));
+   if (_data.meanings) localStorage.setItem('myPlanner_meanings_v1', JSON.stringify(_data.meanings));
+ } catch(e) {}
+}
+
+let allTasks = JSON.parse(
+ localStorage.getItem('myPlanner_tasks_v1') ||
+ localStorage.getItem('myPlanner_tasks_backup') ||
+ sessionStorage.getItem('myPlanner_tasks_v1') ||
+ localStorage.getItem('plannerTasks') || '{}');
+let routine = JSON.parse(
+ localStorage.getItem('myPlanner_routine_v1') ||
+ localStorage.getItem('myPlanner_routine_backup') ||
+ sessionStorage.getItem('myPlanner_routine_v1') ||
+ localStorage.getItem('plannerRoutine') || '[]');
+let colorMeanings = JSON.parse(localStorage.getItem('myPlanner_meanings_v1') || '{}');
+
+function saveMeanings() { localStorage.setItem('myPlanner_meanings_v1', JSON.stringify(colorMeanings)); }
+
+// Load saved meanings into inputs
+function loadMeanings() {
+ document.querySelectorAll('.meaning-input').forEach(input => {
+   const key = input.dataset.key;
+   if (colorMeanings[key]) input.value = colorMeanings[key];
+   input.addEventListener('input', () => {
+     colorMeanings[key] = input.value;
+     saveMeanings();
+   });
+ });
+}
+
+function saveTasks() {
+ localStorage.setItem('myPlanner_tasks_v1', JSON.stringify(allTasks));
+ localStorage.setItem('myPlanner_tasks_backup', JSON.stringify(allTasks));
+ sessionStorage.setItem('myPlanner_tasks_v1', JSON.stringify(allTasks));
+ // also save combined backup in case all storage is cleared
+ const combined = JSON.stringify({ tasks: allTasks, routine, meanings: colorMeanings });
+ localStorage.setItem('myPlanner_combined_backup', combined);
+}
+function saveRoutine() {
+ localStorage.setItem('myPlanner_routine_v1', JSON.stringify(routine));
+ localStorage.setItem('myPlanner_routine_backup', JSON.stringify(routine));
+ sessionStorage.setItem('myPlanner_routine_v1', JSON.stringify(routine));
+}
+
+function fixWeekdayTasks() {
+ // Save emergency backup first before doing anything
+ const emergencyBackup = JSON.stringify({ tasks: allTasks, routine });
+ localStorage.setItem('myPlanner_emergency_backup', emergencyBackup);
+
+ let fixed = 0;
+ Object.keys(allTasks).forEach(key => {
+   const parts = key.split('-');
+   const date = new Date(+parts[0], +parts[1]-1, +parts[2]);
+   const dow = date.getDay();
+   if (dow === 5 || dow === 6) {
+     const before = allTasks[key].length;
+     allTasks[key] = allTasks[key].filter(t => t.repeat !== 'weekdays');
+     fixed += before - allTasks[key].length;
+   }
+ });
+ saveTasks();
+ renderMonth();
+ alert('✅ Removed ' + fixed + ' task(s) from Fridays & Saturdays. Emergency backup saved.');
+}
+
+function recoverEmergencyBackup() {
+ const backup = localStorage.getItem('myPlanner_emergency_backup');
+ if (backup) {
+   const data = JSON.parse(backup);
+   if (data.tasks) { allTasks = data.tasks; saveTasks(); }
+   if (data.routine) { routine = data.routine; saveRoutine(); }
+   renderMonth();
+   alert('✅ Emergency backup restored!');
+ } else {
+   alert('No emergency backup found.');
+ }
+}
+
+function exportData() {
+ const data = JSON.stringify({ tasks: allTasks, routine, meanings: colorMeanings }, null, 2);
+ const blob = new Blob([data], { type: 'application/json' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = 'planner-backup.json';
+ document.body.appendChild(a);
+ a.click();
+ document.body.removeChild(a);
+ setTimeout(() => URL.revokeObjectURL(url), 1000);
+ alert('✅ Backup saved! Find it in your Files app → Downloads.');
+}
+
+function importData(event) {
+ const file = event.target.files[0];
+ if (!file) return;
+ const reader = new FileReader();
+ reader.onload = e => {
+   try {
+     const data = JSON.parse(e.target.result);
+     if (data.tasks) { allTasks = data.tasks; saveTasks(); }
+     if (data.routine) { routine = data.routine; saveRoutine(); }
+     if (data.meanings) { colorMeanings = data.meanings; saveMeanings(); }
+     renderMonth();
+     loadMeanings();
+     alert('✅ All your data is back!');
+   } catch {
+     alert('❌ Could not read file. Make sure it\'s a planner backup.');
+   }
+ };
+ reader.readAsText(file);
+}
+
+function dayKey(y, m, d) {
+ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+const now = new Date();
+currentYear = now.getFullYear();
+currentMonth = now.getMonth();
+
+// Silently fix any weekday repeat tasks wrongly placed on Fri/Sat
+Object.keys(allTasks).forEach(key => {
+ const parts = key.split('-');
+ const date = new Date(+parts[0], +parts[1]-1, +parts[2]);
+ const dow = date.getDay();
+ if (dow === 5 || dow === 6) {
+   allTasks[key] = allTasks[key].filter(t => t.repeat !== 'weekdays');
+ }
+});
+saveTasks();
+
+renderMonth();
+loadMeanings();
+
+function renderMonth() {
+ document.getElementById('monthTitle').textContent =
+   new Date(currentYear, currentMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+ document.getElementById('weekdayRow').innerHTML =
+   ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+   .map(d => `<div class="weekday-label">${d}</div>`).join('');
+
+ const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+ const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+ const grid = document.getElementById('calGrid');
+ grid.innerHTML = '';
+
+ for (let i = 0; i < firstDay; i++) {
+   const el = document.createElement('div');
+   el.className = 'cal-day empty';
+   grid.appendChild(el);
+ }
+
+ for (let d = 1; d <= daysInMonth; d++) {
+   const el = document.createElement('div');
+   el.className = 'cal-day';
+   const key = dayKey(currentYear, currentMonth, d);
+   const isToday = d === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
+   if (isToday) el.classList.add('today');
+   if (allTasks[key] && allTasks[key].length > 0) el.classList.add('has-items');
+   const hasSpecial = allTasks[key] && allTasks[key].some(t => t.color === 'pink');
+   if (hasSpecial) el.classList.add('has-special');
+   const hasBirthday = allTasks[key] && allTasks[key].some(t => t.color === 'purple' || t.color === 'pink-dot');
+   el.innerHTML = `<span class="day-num">${d}</span>${hasBirthday ? '<span style="font-size:0.65rem;line-height:1">🎂</span>' : ''}`;
+   el.onclick = () => openDay(currentYear, currentMonth, d);
+   grid.appendChild(el);
+ }
+}
+
+function changeMonth(dir) {
+ currentMonth += dir;
+ if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+ if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+ renderMonth();
+}
+
+function showRoutine() {
+ document.getElementById('monthView').classList.remove('active');
+ document.getElementById('dayView').classList.remove('active');
+ document.getElementById('routineView').classList.add('active');
+ renderRoutine();
+}
+
+function renderRoutine() {
+ const container = document.getElementById('routineBlocks');
+ if (routine.length === 0) {
+   container.innerHTML = `<div class="no-tasks"><span class="no-tasks-text">No routine tasks yet — add one below ↓</span></div>`;
+   return;
+ }
+ const sorted = [...routine].sort((a, b) => {
+   const toMins = t => { if (!t) return 9999; const [h, mi] = (t + ':00').split(':'); return +h * 60 + (+mi || 0); };
+   return toMins(a.time) - toMins(b.time);
+ });
+ container.innerHTML = sorted.map(task => `
+   <div class="task-block ${task.color !== 'white' ? task.color : ''}" id="rt-${task.id}">
+     <div class="task-main" onclick="toggleRoutineTask('${task.id}')">
+       <span class="task-time">${task.time || ''}</span>
+       <span class="task-title">${task.title}</span>
+       <span class="task-arrow">▼</span>
+     </div>
+     <div class="task-detail">
+       ${task.detail ? `<div>${task.detail}</div>` : '<em style="color:#c0aab0">No details.</em>'}
+       <button class="task-delete" onclick="deleteRoutineTask('${task.id}', event)">✕ Remove</button>
+     </div>
+   </div>
+ `).join('');
+}
+
+function toggleRoutineTask(id) {
+ const el = document.getElementById('rt-' + id);
+ if (el) el.classList.toggle('open');
+}
+
+function deleteRoutineTask(id, e) {
+ e.stopPropagation();
+ routine = routine.filter(t => t.id !== id);
+ saveRoutine();
+ renderRoutine();
+}
+
+function pickRoutineColor(el) {
+ document.querySelectorAll('#routineView .cp').forEach(c => c.classList.remove('selected'));
+ el.classList.add('selected');
+ chosenRoutineColor = el.dataset.color;
+}
+
+function addRoutineTask() {
+ const time = document.getElementById('rTime').value.trim();
+ const title = document.getElementById('rTitle').value.trim();
+ const detail = document.getElementById('rDetail').value.trim();
+ if (!title) return;
+ routine.push({
+   id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+   time, title, detail, color: chosenRoutineColor
+ });
+ saveRoutine();
+ document.getElementById('rTime').value = '';
+ document.getElementById('rTitle').value = '';
+ document.getElementById('rDetail').value = '';
+ renderRoutine();
+}
+
+document.getElementById('rTitle').addEventListener('keydown', e => {
+ if (e.key === 'Enter') addRoutineTask();
+});
+
+function showMonth() {
+ document.getElementById('monthView').classList.add('active');
+ document.getElementById('dayView').classList.remove('active');
+ document.getElementById('routineView').classList.remove('active');
+ renderMonth();
+}
+
+function openDay(y, m, d) {
+ selectedDate = { y, m, d };
+ document.getElementById('monthView').classList.remove('active');
+ document.getElementById('dayView').classList.add('active');
+ renderDay();
+}
+
+function changeDay(dir) {
+ const dt = new Date(selectedDate.y, selectedDate.m, selectedDate.d + dir);
+ selectedDate = { y: dt.getFullYear(), m: dt.getMonth(), d: dt.getDate() };
+ renderDay();
+}
+
+function renderDay() {
+ const { y, m, d } = selectedDate;
+ document.getElementById('dayTitle').textContent =
+   new Date(y, m, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+ const key = dayKey(y, m, d);
+ const dayOfWeek = new Date(y, m, d).getDay();
+ const isSkippedDay = dayOfWeek === 5 || dayOfWeek === 6; // 5=Fri, 6=Sat only
+ const dayTasks = (allTasks[key] || []).filter(t => !(t.repeat === 'weekdays' && isSkippedDay));
+ const routineCopies = routine.map(t => ({ ...t, id: 'r-' + t.id, isRoutine: true }));
+ const allForDay = [...routineCopies, ...dayTasks];
+ const container = document.getElementById('dayBlocks');
+
+ if (allForDay.length === 0) {
+   container.innerHTML = `
+     <div class="no-tasks">
+       <button class="no-tasks-btn" onclick="document.getElementById('newTitle').focus()">+</button>
+       <span class="no-tasks-text">No tasks yet — tap to add one</span>
+     </div>`;
+   return;
+ }
+
+ // Use stored order if available, otherwise sort by time
+ const orderKey = 'order_' + key;
+ const storedOrder = JSON.parse(localStorage.getItem(orderKey) || 'null');
+ let tasks;
+ if (storedOrder) {
+   const byId = Object.fromEntries(allForDay.map(t => [t.id, t]));
+   tasks = storedOrder.map(id => byId[id]).filter(Boolean);
+   // append any new tasks not in stored order
+   allForDay.forEach(t => { if (!storedOrder.includes(t.id)) tasks.push(t); });
+ } else {
+   tasks = [...allForDay].sort((a, b) => {
+     const toMins = t => {
+       if (!t) return 9999;
+       const start = t.split('-')[0].trim(); // handle ranges like 6:05-7:12
+       const [h, mi] = (start + ':00').split(':');
+       return +h * 60 + (+mi || 0);
+     };
+     return toMins(a.time) - toMins(b.time);
+   });
+ }
+
+ container.innerHTML = tasks.map(task => `
+   <div class="task-block ${task.color !== 'white' ? task.color : ''}" id="task-${task.id}" data-id="${task.id}">
+     <div class="task-main" onclick="toggleTask('${task.id}')">
+       <span class="task-time">${(task.color === 'purple' || task.color === 'pink-dot') ? '' : (task.time || '')}</span>
+       <span class="task-title">${(task.color === 'purple' || task.color === 'pink-dot') ? '🎂 ' : task.color === 'green' ? '📝 ' : ''}${task.title}</span>
+       <span class="task-arrow">▼</span>
+     </div>
+     <div class="task-detail" id="detail-${task.id}">
+       ${task.detail ? `<div style="margin-bottom:6px">${task.detail}</div>` : '<em style="color:#c0aab0">No details.</em>'}
+       ${task.isRoutine
+         ? `<em style="color:#b0c0d8;font-size:0.72rem">📋 Part of your routine — edit in Routine editor</em>`
+         : `
+           ${task.repeat && task.repeat !== 'none' ? `<div style="color:#b0c0d8;font-size:0.72rem;margin-bottom:6px">🔁 Repeats ${repeatLabel(task.repeat)}</div>` : ''}
+           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+             <button class="task-edit-btn" onclick="showEditForm('${task.id}', event)">✏️ Edit</button>
+             <button class="task-delete" onclick="deleteTask('${task.id}', event)">✕ Delete this one</button>
+             <button class="task-delete" style="background:#9b59b6" onclick="deleteAllRepeats('${task.repeatId || task.id}', event)">✕ Delete all</button>
+           </div>
+           <div class="edit-form" id="edit-${task.id}" style="display:none;margin-top:10px">
+             <input class="edit-field" id="et-${task.id}" type="text" value="${task.time || ''}" placeholder="Time (e.g. 6:00 or 6:00-7:00)">
+             <input class="edit-field" id="en-${task.id}" type="text" value="${task.title}" placeholder="Title">
+             <input class="edit-field" id="ed-${task.id}" type="text" value="${task.detail || ''}" placeholder="Details">
+             <select class="edit-field" id="er-${task.id}" style="cursor:pointer">
+               <option value="none" ${(task.repeat||'none')==='none'?'selected':''}>No repeat</option>
+               <option value="daily" ${task.repeat==='daily'?'selected':''}>Every day</option>
+               <option value="weekdays" ${task.repeat==='weekdays'?'selected':''}>Every day except Fri & Sat</option>
+               <option value="weekly" ${task.repeat==='weekly'?'selected':''}>Every week</option>
+               <option value="2weeks" ${task.repeat==='2weeks'?'selected':''}>Every 2 weeks</option>
+               <option value="monthly" ${task.repeat==='monthly'?'selected':''}>Every month</option>
+               <option value="2months" ${task.repeat==='2months'?'selected':''}>Every 2 months</option>
+               <option value="3months" ${task.repeat==='3months'?'selected':''}>Every 3 months</option>
+               <option value="yearly" ${task.repeat==='yearly'?'selected':''}>Every year</option>
+             </select>
+             <div style="display:flex;gap:5px;flex-wrap:wrap;margin:8px 0;align-items:center">
+               <span style="font-size:0.75rem;color:#9aaabb;margin-right:2px">Color:</span>
+               <div class="cp c-white ${task.color==='white'||!task.color?'selected':''}" data-color="white" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-red ${task.color==='red'?'selected':''}" data-color="red" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-orange ${task.color==='orange'?'selected':''}" data-color="orange" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-yellow ${task.color==='yellow'?'selected':''}" data-color="yellow" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-blue ${task.color==='blue'?'selected':''}" data-color="blue" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-green ${task.color==='green'?'selected':''}" data-color="green" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-purple ${task.color==='purple'?'selected':''}" data-color="purple" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-pink ${task.color==='pink'?'selected':''}" data-color="pink" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-lilac ${task.color==='lilac'?'selected':''}" data-color="lilac" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-red-dot ${task.color==='red-dot'?'selected':''}" data-color="red-dot" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-orange-dot ${task.color==='orange-dot'?'selected':''}" data-color="orange-dot" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-yellow-dot ${task.color==='yellow-dot'?'selected':''}" data-color="yellow-dot" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-blue-dot ${task.color==='blue-dot'?'selected':''}" data-color="blue-dot" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-green-dot ${task.color==='green-dot'?'selected':''}" data-color="green-dot" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-purple-dot ${task.color==='purple-dot'?'selected':''}" data-color="purple-dot" onclick="pickEditColor(this,'${task.id}')"></div>
+               <div class="cp c-pink-dot ${task.color==='pink-dot'?'selected':''}" data-color="pink-dot" onclick="pickEditColor(this,'${task.id}')"></div>
+             </div>
+             <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+               <button class="task-edit-btn" onclick="saveEdit('${task.id}', 'one', event)">✓ Save this one</button>
+               <button class="task-edit-btn" style="background:#dde8fc" onclick="saveEdit('${task.id}', 'all', event)">✓ Save all</button>
+               <button class="task-delete" style="background:#aaa" onclick="hideEditForm('${task.id}', event)">Cancel</button>
+             </div>
+           </div>
+         `}
+     </div>
+   </div>
+ `).join('');
+
+ initDrag();
+}
+
+function showEditForm(id, e) {
+ e.stopPropagation();
+ const form = document.getElementById('edit-' + id);
+ form.style.display = 'block';
+ setTimeout(() => {
+   const saveBtn = form.querySelector('button');
+   if (saveBtn) saveBtn.scrollIntoView({ behavior: 'smooth', block: 'end' });
+   else form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+ }, 100);
+}
+
+function hideEditForm(id, e) {
+ e.stopPropagation();
+ document.getElementById('edit-' + id).style.display = 'none';
+}
+
+function pickEditColor(el, taskId) {
+ el.closest('.edit-form').querySelectorAll('.cp').forEach(c => c.classList.remove('selected'));
+ el.classList.add('selected');
+}
+
+function saveEdit(id, scope, e) {
+ e.stopPropagation();
+ const form = document.getElementById('edit-' + id);
+ const newTime   = document.getElementById('et-' + id).value.trim();
+ const newTitle  = document.getElementById('en-' + id).value.trim();
+ const newDetail = document.getElementById('ed-' + id).value.trim();
+ const newRepeat = document.getElementById('er-' + id).value;
+ const colorEl   = form.querySelector('.cp.selected');
+ const newColor  = colorEl ? colorEl.dataset.color : 'white';
+
+ const key = dayKey(selectedDate.y, selectedDate.m, selectedDate.d);
+ const task = (allTasks[key] || []).find(t => t.id === id);
+
+ if (scope === 'all' && task && task.repeatId) {
+   Object.keys(allTasks).forEach(k => {
+     allTasks[k] = allTasks[k].map(t => {
+       if (t.repeatId === task.repeatId) {
+         return { ...t, time: newTime, title: newTitle, detail: newDetail, repeat: newRepeat, color: newColor };
+       }
+       return t;
+     });
+   });
+ } else {
+   if (task) {
+     task.time   = newTime;
+     task.title  = newTitle;
+     task.detail = newDetail;
+     task.repeat = newRepeat;
+     task.color  = newColor;
+   }
+ }
+
+ saveTasks();
+ renderDay();
+}
+
+function deleteTask(id, e) {
+ e.stopPropagation();
+ const key = dayKey(selectedDate.y, selectedDate.m, selectedDate.d);
+ allTasks[key] = (allTasks[key] || []).filter(t => t.id !== id);
+ saveTasks();
+ renderDay();
+}
+
+function deleteAllRepeats(repeatId, e) {
+ e.stopPropagation();
+ // find the repeatId from the task if not passed directly
+ const key = dayKey(selectedDate.y, selectedDate.m, selectedDate.d);
+ const task = (allTasks[key] || []).find(t => t.id === repeatId);
+ const rid = task ? (task.repeatId || task.id) : repeatId;
+ Object.keys(allTasks).forEach(k => {
+   allTasks[k] = allTasks[k].filter(t => t.repeatId !== rid && t.id !== rid);
+ });
+ saveTasks();
+ renderDay();
+}
+
+function saveOrder() {
+ const { y, m, d } = selectedDate;
+ const key = dayKey(y, m, d);
+ const orderKey = 'order_' + key;
+ const blocks = document.querySelectorAll('#dayBlocks .task-block');
+ const order = [...blocks].map(b => b.dataset.id);
+ localStorage.setItem(orderKey, JSON.stringify(order));
+}
+
+function initDrag() {
+ const container = document.getElementById('dayBlocks');
+ const blocks = [...container.querySelectorAll('.task-block')];
+ let dragEl = null, clone = null, timer = null, startX = 0, startY = 0, offsetY = 0, isDragging = false;
+
+ function cancelDrag() {
+   clearTimeout(timer);
+   if (dragEl) dragEl.style.opacity = '';
+   if (clone) clone.remove();
+   clone = null; dragEl = null; isDragging = false;
+   blocks.forEach(b => b.classList.remove('drag-over'));
+ }
+
+ blocks.forEach(block => {
+   block.addEventListener('touchstart', e => {
+     const touch = e.touches[0];
+     startX = touch.clientX;
+     startY = touch.clientY;
+     isDragging = false;
+
+     timer = setTimeout(() => {
+       isDragging = true;
+       dragEl = block;
+       offsetY = touch.clientY - block.getBoundingClientRect().top;
+       block.style.opacity = '0.3';
+       navigator.vibrate && navigator.vibrate(50);
+
+       clone = block.cloneNode(true);
+       clone.style.cssText = `
+         position:fixed;
+         left:${block.getBoundingClientRect().left}px;
+         top:${touch.clientY - offsetY}px;
+         width:${block.offsetWidth}px;
+         opacity:0.9;
+         z-index:9999;
+         pointer-events:none;
+         border-radius:10px;
+         box-shadow:0 8px 24px rgba(0,0,0,0.25);
+       `;
+       document.body.appendChild(clone);
+     }, 400);
+   }, { passive: true });
+
+   block.addEventListener('touchmove', e => {
+     const touch = e.touches[0];
+     const dx = Math.abs(touch.clientX - startX);
+     const dy = Math.abs(touch.clientY - startY);
+
+     if (!isDragging) {
+       if (dy > 6 || dx > 6) clearTimeout(timer);
+       return;
+     }
+
+     e.preventDefault();
+     clone.style.top = (touch.clientY - offsetY) + 'px';
+
+     clone.style.visibility = 'hidden';
+     const el = document.elementFromPoint(touch.clientX, touch.clientY);
+     clone.style.visibility = '';
+     const target = el && el.closest('.task-block');
+     blocks.forEach(b => b.classList.remove('drag-over'));
+     if (target && target !== dragEl) target.classList.add('drag-over');
+   }, { passive: false });
+
+   block.addEventListener('touchend', e => {
+     clearTimeout(timer);
+     if (!isDragging || !dragEl) { cancelDrag(); return; }
+
+     const touch = e.changedTouches[0];
+     clone.style.visibility = 'hidden';
+     const el = document.elementFromPoint(touch.clientX, touch.clientY);
+     clone.style.visibility = '';
+     const target = el && el.closest('.task-block');
+
+     if (target && target !== dragEl) {
+       const all = [...container.querySelectorAll('.task-block')];
+       const si = all.indexOf(dragEl), ti = all.indexOf(target);
+       if (si < ti) target.after(dragEl);
+       else target.before(dragEl);
+     }
+
+     cancelDrag();
+     saveOrder();
+   });
+
+   block.addEventListener('touchcancel', cancelDrag);
+ });
+}
+
+function startDrag() {}
+
+function toggleTask(id) {
+ const el = document.getElementById('task-' + id);
+ if (el) el.classList.toggle('open');
+}
+
+function repeatLabel(r) {
+ return { daily:'every day', weekdays:'every day except Fri & Sat', weekly:'every week', '2weeks':'every 2 weeks', monthly:'every month', '2months':'every 2 months', '3months':'every 3 months', yearly:'every year' }[r] || '';
+}
+
+function deleteAllRepeats(repeatId, e) {
+ e.stopPropagation();
+ Object.keys(allTasks).forEach(key => {
+   allTasks[key] = allTasks[key].filter(t => t.repeatId !== repeatId);
+ });
+ saveTasks();
+ renderDay();
+}
+
+function deleteTask(id, e) {
+ e.stopPropagation();
+ const key = dayKey(selectedDate.y, selectedDate.m, selectedDate.d);
+ allTasks[key] = (allTasks[key] || []).filter(t => t.id !== id);
+ saveTasks();
+ renderDay();
+}
+
+function pickColor(el) {
+ document.querySelectorAll('.cp').forEach(c => c.classList.remove('selected'));
+ el.classList.add('selected');
+ chosenColor = el.dataset.color;
+ const isBirthday = chosenColor === 'purple' || chosenColor === 'pink-dot';
+ const timeField = document.getElementById('newTime');
+ if (isBirthday) {
+   timeField.style.display = 'none';
+   timeField.value = '';
+ } else {
+   timeField.style.display = '';
+ }
+}
+
+function addTask() {
+ const time = document.getElementById('newTime').value.trim();
+ const title = document.getElementById('newTitle').value.trim();
+ const detail = document.getElementById('newDetail').value.trim();
+ const repeat = document.getElementById('newRepeat').value;
+ if (!title) return;
+
+ const { y, m, d } = selectedDate;
+ const startDate = new Date(y, m, d);
+
+ // Build list of dates to add the task to
+ const dates = [];
+ // Only add start date if it's not Fri/Sat when using weekdays repeat
+ if (repeat !== 'weekdays' || (startDate.getDay() !== 5 && startDate.getDay() !== 6)) {
+   dates.push(new Date(startDate));
+ }
+
+ if (repeat !== 'none') {
+   const endDate = new Date(startDate);
+   endDate.setFullYear(endDate.getFullYear() + 2); // spread up to 2 years ahead
+
+   let current = new Date(startDate);
+   while (true) {
+     let next = new Date(current);
+     if (repeat === 'daily')        next.setDate(next.getDate() + 1);
+     else if (repeat === 'weekdays') {
+       next.setDate(next.getDate() + 1);
+       while (next.getDay() === 5 || next.getDay() === 6) next.setDate(next.getDate() + 1);
+     }
+     else if (repeat === 'weekly')  next.setDate(next.getDate() + 7);
+     else if (repeat === '2weeks')  next.setDate(next.getDate() + 14);
+     else if (repeat === 'monthly') next.setMonth(next.getMonth() + 1);
+     else if (repeat === '2months') next.setMonth(next.getMonth() + 2);
+     else if (repeat === '3months') next.setMonth(next.getMonth() + 3);
+     else if (repeat === 'yearly')  next.setFullYear(next.getFullYear() + 1);
+
+     if (next > endDate) break;
+     dates.push(new Date(next));
+     current = next;
+   }
+ }
+
+ const repeatId = Date.now().toString(36); // same repeatId for all copies
+ dates.forEach(date => {
+   const key = dayKey(date.getFullYear(), date.getMonth(), date.getDate());
+   if (!allTasks[key]) allTasks[key] = [];
+   allTasks[key].push({
+     id: repeatId + '-' + date.getTime().toString(36),
+     repeatId: repeat !== 'none' ? repeatId : null,
+     repeat,
+     time, title, detail, color: chosenColor
+   });
+ });
+
+ saveTasks();
+ document.getElementById('newTime').value = '';
+ document.getElementById('newTitle').value = '';
+ document.getElementById('newDetail').value = '';
+ document.getElementById('newRepeat').value = 'none';
+ renderDay();
+}
+
+document.getElementById('newTitle').addEventListener('keydown', e => {
+ if (e.key === 'Enter') addTask();
+});
+</script>
+
+</body>
+</html>
